@@ -1,6 +1,7 @@
 import argparse
 
 from torch import nn
+from torch import no_grad
 from torchvision.models import resnet18
 
 from data_loader import dataSet
@@ -25,6 +26,8 @@ test_loader = DataLoader(
     dataSet(path=args.dataset_path, subset='test'),
     batch_size=batch_size, shuffle=False
 )
+train_len = len(train_loader)
+test_len = len(test_loader)
 
 Net = resnet18()  # resnet18を取得
 Net.fc = nn.Linear(512, args.class_num)  # 最後の全結合層の出力はクラス数に合わせる必要がある
@@ -37,8 +40,22 @@ if args.use_cuda:
     criterion = criterion.cuda()
     Net = nn.DataParallel(Net.cuda())
 
+
+def test():
+    running_loss = 0
+    for i, data in enumerate(test_loader):
+        inputs, labels = data
+
+        with no_grad:
+            outputs = Net(inputs)  # この記述方法で順伝搬が行われる
+            loss = criterion(outputs, labels)  # Loss値を計算
+            running_loss += loss.item()
+    print(f'test_loss_avg = {running_loss / train_len}')
+
+
 for epoch in range(args.epoch_num):  # loop over the dataset multiple times
 
+    running_loss = 0
     for i, data in enumerate(train_loader):  # データセットから1バッチ分取り出す
         # get the inputs
         inputs, labels = data
@@ -51,9 +68,11 @@ for epoch in range(args.epoch_num):  # loop over the dataset multiple times
         loss = criterion(outputs, labels)  # Loss値を計算
         loss.backward()  # 逆伝搬で勾配を求める
         optimizer.step()  # 重みを更新
-        print(f'epoch = {epoch + 1}, i = {i + 1}, loss = {loss.item()}')
+
+        running_loss += loss.item()
 
         # print statistics
         if i % args.eval_interval == 0:  # print every 2000 mini-batches
             pass
             # print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 2000))
+    print(f'epoch = {epoch + 1}, loss_avg = {running_loss / train_len}')
