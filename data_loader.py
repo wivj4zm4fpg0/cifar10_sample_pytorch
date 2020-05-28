@@ -9,7 +9,7 @@ from torchvision import transforms
 from torchvision.utils import make_grid
 
 
-class dataSet(Dataset):
+class dataSet(Dataset):  # torch.utils.data.Datasetを継承
 
     def __init__(self, path: str, subset: str, pre_processing: transforms.Compose = None):
         assert subset == 'train' or subset == 'test'
@@ -42,7 +42,7 @@ class dataSet(Dataset):
         label = self.data_list[index][1]
         return img, label  # 入力画像とそのラベルをタプルとして返す
 
-    def __len__(self):
+    def __len__(self) -> int:  # データセットの数を返すようにする
         return len(self.data_list)
 
 
@@ -53,18 +53,18 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_path', type=str, required=True)
     parser.add_argument('--subset', type=str, default='train', required=False)
+    parser.add_argument('--batch_size', type=int, default=8, required=False)
 
     args = parser.parse_args()
 
     data_loader = DataLoader(
         dataSet(path=args.dataset_path, subset=args.subset),
-        batch_size=1, shuffle=False
+        batch_size=args.batch_size, shuffle=False
     )
 
 
     def image_show(img):  # 画像を表示
-        img = make_grid(img) / 2 + 0.5  # unnormalize
-        np_img = img.numpy()
+        np_img = make_grid(img).numpy()
         cv2.imshow('image', np.transpose(np_img, (1, 2, 0)))
         cv2.moveWindow('image', 100, 200)
         if cv2.waitKey(0) & 0xFF == ord('q'):
