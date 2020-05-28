@@ -91,6 +91,7 @@ for epoch in range(2):  # loop over the dataset multiple times
 
         # forward + backward + optimize
         outputs = net(inputs)  # この記述方法で順伝搬が行われる
+        print(f'{labels.shape=}\n{outputs.shape=}')
         loss = criterion(outputs, labels)  # Loss値を計算
         loss.backward()  # 逆伝搬で勾配を求める
         optimizer.step()  # 重みを更新

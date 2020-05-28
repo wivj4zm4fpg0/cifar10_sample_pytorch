@@ -2,7 +2,6 @@ import os
 
 import cv2
 import numpy as np
-import torch
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
@@ -32,9 +31,9 @@ class dataSet(Dataset):  # torch.utils.data.Datasetを継承
             for image_name in os.listdir(class_path):
                 image_path = os.path.join(class_path, image_name)
                 # クラス分類のラベルは猫(正解とする)、犬、トラ->(1, 0, 0)となる
-                target = torch.zeros(class_len)
-                target[i] = 1
-                self.data_list.append((image_path, target))
+                # target = torch.zeros(class_len)
+                # target[i] = 1
+                self.data_list.append((image_path, i))
 
     # イテレートするときに実行されるメソッド．ここをオーバーライドする必要がある．
     def __getitem__(self, index: int) -> tuple:
