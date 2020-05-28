@@ -2,6 +2,8 @@ import argparse
 
 from torch import nn
 from torch import no_grad
+from torch import optim
+from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 
 from data_loader import dataSet
@@ -35,8 +37,6 @@ criterion = nn.CrossEntropyLoss()  # Loss関数を定義
 optimizer = optim.SGD(Net.parameters(), lr=0.001, momentum=0.9)  # 重み更新方法を定義
 
 if args.use_cuda:
-    from torch.backends import cudnn
-
     criterion = criterion.cuda()
     Net = nn.DataParallel(Net.cuda())
 
