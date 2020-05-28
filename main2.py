@@ -73,5 +73,5 @@ for epoch in range(args.epoch_num):  # loop over the dataset multiple times
 
         # print statistics
         if i % args.eval_interval == 0:  # print every 2000 mini-batches
-            test_loader
+            test()
     print(f'epoch = {epoch + 1}, loss_avg = {running_loss / train_len}')
