@@ -1,13 +1,12 @@
 import os
 
-import matplotlib.pyplot as plt
+import cv2
 import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from torchvision.utils import make_grid
-import cv2
 
 
 class dataSet(Dataset):
@@ -48,6 +47,7 @@ class dataSet(Dataset):
 
 
 if __name__ == '__main__':
+
     import argparse
 
     parser = argparse.ArgumentParser()
@@ -63,14 +63,14 @@ if __name__ == '__main__':
 
 
     def image_show(img):  # 画像を表示
-        img = img / 2 + 0.5  # unnormalize
+        img = make_grid(img) / 2 + 0.5  # unnormalize
         np_img = img.numpy()
-        cv2.imshow('image', np_img)
-        # plt.imshow(np.transpose(np_img, (1, 2, 0)))
-        # plt.show()
-        # input()
+        cv2.imshow('image', np.transpose(np_img, (1, 2, 0)))
+        cv2.moveWindow('image', 100, 200)
+        if cv2.waitKey(0) & 0xFF == ord('q'):
+            exit(0)
 
 
     for input_image, input_label in data_loader:
         print(input_label)
-        image_show(make_grid(input_image))
+        image_show(input_image)
