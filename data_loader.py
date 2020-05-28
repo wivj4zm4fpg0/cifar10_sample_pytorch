@@ -25,14 +25,10 @@ class dataSet(Dataset):  # torch.utils.data.Datasetを継承
             ])
 
         root_path = os.path.join(path, subset)
-        class_len = len(os.listdir(root_path))
         for i, class_name in enumerate(os.listdir(root_path)):
             class_path = os.path.join(root_path, class_name)
             for image_name in os.listdir(class_path):
                 image_path = os.path.join(class_path, image_name)
-                # クラス分類のラベルは猫(正解とする)、犬、トラ->(1, 0, 0)となる
-                # target = torch.zeros(class_len)
-                # target[i] = 1
                 self.data_list.append((image_path, i))
 
     # イテレートするときに実行されるメソッド．ここをオーバーライドする必要がある．
@@ -45,7 +41,7 @@ class dataSet(Dataset):  # torch.utils.data.Datasetを継承
         return len(self.data_list)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # データセットの読み込みテストを行う
 
     import argparse
 

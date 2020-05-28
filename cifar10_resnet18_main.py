@@ -1,8 +1,6 @@
 import argparse
 
-from torch import nn
-from torch import no_grad
-from torch import optim
+from torch import max, nn, no_grad, optim
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 
@@ -28,8 +26,8 @@ test_loader = DataLoader(
     dataSet(path=args.dataset_path, subset='test'),
     batch_size=batch_size, shuffle=False
 )
-train_len = len(train_loader)
-test_len = len(test_loader)
+train_batch_len = len(train_loader)
+test_batch_len = len(test_loader)
 
 # 初期設定
 Net = resnet18()  # resnet18を取得
@@ -49,21 +47,28 @@ else:
 # テスト用の関数を用意
 def test():
     with no_grad():  # 勾配計算が行われなくなる
-        running_loss = 0
+        epoch_loss = 0
+        epoch_accuracy = 0
         for i, data in enumerate(test_loader):
             inputs, labels = data
             labels = labels.to(device, non_blocking=True)
             outputs = Net(inputs)  # この記述方法で順伝搬が行われる
             loss = criterion(outputs, labels)  # Loss値を計算
-            running_loss += loss.item()
-            print(f'test: i = [{i}/{test_len}], loss = {loss.item()}')
-        print(f'test_loss_avg = {running_loss / test_len}')
+            predicted = max(outputs.data, 1)[1]
+            accuracy = (predicted == labels).sum().item() / test_batch_len
+            epoch_accuracy += accuracy
+            epoch_loss += loss.item()
+            print(f'test: i = [{i}/{test_batch_len - 1}], loss = {loss.item()}, {accuracy=}')
+        loss_avg = epoch_loss / test_batch_len
+        accuracy_avg = epoch_accuracy / test_batch_len
+        print(f'test: loss_avg = {loss_avg=}, accuracy_avg = {accuracy_avg=}')
 
 
 # 訓練を実行．指定数epoch毎にテスト関数を実行
 for epoch in range(args.epoch_num):  # loop over the dataset multiple times
 
-    running_loss = 0
+    epoch_loss = 0
+    epoch_accuracy = 0
     for i, data in enumerate(train_loader):  # データセットから1バッチ分取り出す
         # 前処理
         inputs, labels = data  # 入力データを取得
@@ -77,8 +82,13 @@ for epoch in range(args.epoch_num):  # loop over the dataset multiple times
         optimizer.step()  # 重みを更新
 
         # 後処理
-        running_loss += loss.item()
-        print(f'train: i = [{i}/{train_len}], loss = {loss.item()}')
-    print(f'epoch = {epoch + 1}, loss_avg = {running_loss / train_len}')
+        predicted = max(outputs.data, 1)[1]
+        accuracy = (predicted == labels).sum().item() / train_batch_len
+        epoch_accuracy += accuracy
+        epoch_loss += loss.item()
+        print(f'epoch = {epoch + 1}, i = [{i}/{train_batch_len - 1}], loss = {loss.item()}, {accuracy=}')
+    loss_avg = epoch_loss / train_batch_len
+    accuracy_avg = epoch_accuracy / train_batch_len
+    print(f'epoch = {epoch + 1}, loss_avg = {loss_avg=}, accuracy_avg = {accuracy_avg=}')
     if epoch % args.eval_interval == 0:  # 指定数epoch毎にテストを実行
         test()
