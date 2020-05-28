@@ -7,6 +7,7 @@ from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from torchvision.utils import make_grid
+import cv2
 
 
 class dataSet(Dataset):
@@ -64,9 +65,10 @@ if __name__ == '__main__':
     def image_show(img):  # 画像を表示
         img = img / 2 + 0.5  # unnormalize
         np_img = img.numpy()
-        plt.imshow(np.transpose(np_img, (1, 2, 0)))
-        plt.show()
-        input()
+        cv2.imshow('image', np_img)
+        # plt.imshow(np.transpose(np_img, (1, 2, 0)))
+        # plt.show()
+        # input()
 
 
     for input_image, input_label in data_loader:
