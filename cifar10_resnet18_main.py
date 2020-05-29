@@ -50,15 +50,21 @@ def test():
         epoch_loss = 0
         epoch_accuracy = 0
         for i, data in enumerate(test_loader):
+            # 前処理
             inputs, labels = data
             labels = labels.to(device, non_blocking=True)
+
+            # 演算
             outputs = Net(inputs)  # この記述方法で順伝搬が行われる
             loss = criterion(outputs, labels)  # Loss値を計算
+
+            # 後処理
             predicted = max(outputs.data, 1)[1]
             accuracy = (predicted == labels).sum().item() / test_batch_len
             epoch_accuracy += accuracy
             epoch_loss += loss.item()
             print(f'test: i = [{i}/{test_batch_len - 1}], loss = {loss.item()}, {accuracy=}')
+
         loss_avg = epoch_loss / test_batch_len
         accuracy_avg = epoch_accuracy / test_batch_len
         print(f'test: loss_avg = {loss_avg=}, accuracy_avg = {accuracy_avg=}')
@@ -69,6 +75,7 @@ for epoch in range(args.epoch_num):  # loop over the dataset multiple times
 
     epoch_loss = 0
     epoch_accuracy = 0
+
     for i, data in enumerate(train_loader):  # データセットから1バッチ分取り出す
         # 前処理
         inputs, labels = data  # 入力データを取得
@@ -87,8 +94,10 @@ for epoch in range(args.epoch_num):  # loop over the dataset multiple times
         epoch_accuracy += accuracy
         epoch_loss += loss.item()
         print(f'epoch = {epoch + 1}, i = [{i}/{train_batch_len - 1}], loss = {loss.item()}, {accuracy=}')
+
     loss_avg = epoch_loss / train_batch_len
     accuracy_avg = epoch_accuracy / train_batch_len
     print(f'epoch = {epoch + 1}, loss_avg = {loss_avg=}, accuracy_avg = {accuracy_avg=}')
+
     if epoch % args.eval_interval == 0:  # 指定数epoch毎にテストを実行
         test()
