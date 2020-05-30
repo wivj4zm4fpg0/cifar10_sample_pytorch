@@ -14,6 +14,7 @@ parser.add_argument('--epoch_num', type=int, default=100, required=False)
 parser.add_argument('--eval_interval', type=int, default=10, required=False)
 parser.add_argument('--batch_size', type=int, default=1028, required=False)
 parser.add_argument('--use_cuda', action='store_true')
+parser.add_argument('--use_pretrained_model', action='store_true')
 args = parser.parse_args()
 batch_size = args.batch_size
 
@@ -30,7 +31,7 @@ train_batch_len = len(train_loader)
 test_batch_len = len(test_loader)
 
 # 初期設定
-Net = resnet18()  # resnet18を取得
+Net = resnet18(pretrained=args.use_pretrained_model)  # resnet18を取得
 Net.fc = nn.Linear(512, args.class_num)  # 最後の全結合層の出力はクラス数に合わせる必要がある
 criterion = nn.CrossEntropyLoss()  # Loss関数を定義
 optimizer = optim.SGD(Net.parameters(), lr=0.001, momentum=0.9)  # 重み更新方法を定義
