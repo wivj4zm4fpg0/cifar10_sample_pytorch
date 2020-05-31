@@ -41,7 +41,7 @@ class dataSet(Dataset):  # torch.utils.data.Datasetを継承
         return len(self.data_list)
 
 
-if __name__ == '__main__':  # データセットの読み込みテストを行う
+if __name__ == '__main__':  # CIFAR10データセットの読み込みテストを行う
 
     import argparse
 
@@ -59,8 +59,8 @@ if __name__ == '__main__':  # データセットの読み込みテストを行�
 
 
     def image_show(img):  # 画像を表示
-        np_img = make_grid(img).numpy()
-        cv2.imshow('image', np.transpose(np_img, (1, 2, 0)))
+        np_img = np.transpose(make_grid(img).numpy(), (1, 2, 0))
+        cv2.imshow('image', cv2.cvtColor(np_img, cv2.COLOR_BGR2RGB))
         cv2.moveWindow('image', 100, 200)
         if cv2.waitKey(0) & 0xFF == ord('q'):
             exit(0)
