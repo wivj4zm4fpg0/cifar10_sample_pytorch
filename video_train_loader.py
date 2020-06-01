@@ -17,7 +17,7 @@ def ucf101_train_path_load(video_path: str, label_path: str) -> list:
         label_path_list = [s.strip() for s in f.readlines()]
         for label in label_path_list:
             split_label = label.split(' ')
-            data_list.append((os.path.join(video_path, split_label[0][:-4]), int(split_label[1])))
+            data_list.append((os.path.join(video_path, split_label[0][:-4]), int(split_label[1]) - 1))
     return data_list
 
 
@@ -47,17 +47,10 @@ class VideoTrainDataSet(Dataset):  # torch.utils.data.Datasetを継承
         frame_index = randint(0, video_len - self.frame_num - 1)
         frame_indices = range(frame_index, frame_index + self.frame_num)
         random_horizontal_flip = randint(0, 1)  # 0なら左右反転しない．1ならする
-        # pre_processing = lambda image_path: self.pre_processing[random_horizontal_flip](Image.open(image_path))
-        pre_processing = lambda image_path: self.pre_processing[random_horizontal_flip](image_path)
+        pre_processing = lambda image_path: self.pre_processing[random_horizontal_flip](Image.open(image_path))
         # リスト内包表記で検索
-        frame_tensors = []
-        # print(f'{self.data_list[index][0]}')
-        for i in frame_indices:
-            img = Image.open(os.path.join(self.data_list[index][0], frame_list[i])).convert('RGB')
-            # print(f'{img=}')
-            frame_tensors.append(pre_processing(img))
-        # frame_tensors = [pre_processing(os.path.join(self.data_list[index][0], frame_list[i])) for i in frame_indices]
-        video_tensor = torch.stack(frame_tensors)  # 3次元Tensorを含んだList -> 4次元Tensorに変換
+        video_tensor = [pre_processing(os.path.join(self.data_list[index][0], frame_list[i])) for i in frame_indices]
+        video_tensor = torch.stack(video_tensor)  # 3次元Tensorを含んだList -> 4次元Tensorに変換
         label = self.data_list[index][1]
         return video_tensor, label  # 入力画像とそのラベルをタプルとして返す
 

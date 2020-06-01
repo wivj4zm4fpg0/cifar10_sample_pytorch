@@ -17,7 +17,7 @@ def ucf101_test_path_load(video_path: str, label_path: str, class_path: str) -> 
         class_list = [s.strip() for s in f.readlines()]
         for txt_line in class_list:
             txt_line_split = txt_line.split(' ')
-            class_dict[txt_line_split[1]] = int(txt_line_split[0])
+            class_dict[txt_line_split[1]] = int(txt_line_split[0]) - 1
     with open(label_path) as f:
         label_path_list = [s.strip() for s in f.readlines()]
         for label in label_path_list:
