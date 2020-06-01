@@ -95,8 +95,8 @@ if __name__ == '__main__':  # UCF101データセットの読み込みテスト�
             exit(0)
 
 
-    for input_videos, input_label in data_loader:
+    for i, (input_videos, input_label) in enumerate(data_loader):
+        if i % 5 != 0:
+            continue
         print(input_label)
-        for input_per_batch in input_videos:
-            for images in input_per_batch:
-                image_show(images)
+        image_show(input_videos[0][0])
