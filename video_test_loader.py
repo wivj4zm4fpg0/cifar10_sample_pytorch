@@ -1,5 +1,4 @@
 import os
-from random import randint
 
 import cv2
 import numpy as np
@@ -11,22 +10,27 @@ from torchvision.utils import make_grid
 
 
 # データセットの形式に合わせて新しく作る
-def ucf101_path_load(video_path: str, label_path: str) -> list:
+def ucf101_path_load(video_path: str, label_path: str, class_path: str) -> list:
     data_list = []
+    class_dict = {}
+    with open(class_path) as f:
+        class_list = [s.strip() for s in f.readlines()]
+        for txt_line in class_list:
+            txt_line_split = txt_line.split(' ')
+            class_dict[txt_line_split[1]] = int(txt_line_split[0])
     with open(label_path) as f:
         label_path_list = [s.strip() for s in f.readlines()]
         for label in label_path_list:
-            split_label = label.split(' ')
-            data_list.append((os.path.join(video_path, split_label[0][:-4]), int(split_label[1])))
+            data_list.append((os.path.join(video_path, label[:-4]), class_dict[os.path.split(label)[0]]))
     return data_list
 
 
 class VideoTrainDataSet(Dataset):  # torch.utils.data.Datasetを継承
 
-    def __init__(self, pre_processing: transforms.Compose = None, frame_num: int = 4, path_load: function = None):
+    def __init__(self, pre_processing: transforms.Compose = None, frame_num: int = 4, path_load: list = None):
 
         self.frame_num = frame_num
-        self.data_list = path_load(video_path)
+        self.data_list = path_load
 
         if pre_processing:
             self.pre_processing = pre_processing
@@ -47,9 +51,9 @@ class VideoTrainDataSet(Dataset):  # torch.utils.data.Datasetを継承
         ]
         テストフェイズではこの3つのデータを入力して3つの出力を平均する
         """
-        entirety_frame_list = os.listdir(self.data_list[index])
+        entirety_frame_list = os.listdir(self.data_list[index][0])
         video_len = len(entirety_frame_list)
-        frame_indices = list(range(0, video_len, self.frame_num))
+        frame_indices = list(range(0, video_len - self.frame_num, self.frame_num))
         pre_processing = lambda image_path: self.pre_processing(Image.open(image_path))
         video_tensor_list = []
         for frame_start in frame_indices:
@@ -70,14 +74,15 @@ if __name__ == '__main__':  # UCF101データセットの読み込みテスト�
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--ucf101_dataset_path', type=str, required=True)
-    parser.add_argument('--subset', type=str, default='train', required=False)
-    parser.add_argument('--ucf101_label_path', type=str, required=True)
-    parser.add_argument('--batch_size', type=int, default=8, required=False)
+    parser.add_argument('--ucf101_label_path', type=str, default='testlist01.txt', required=False)
+    parser.add_argument('--ucf101_class_path', type=str, default='classInd.txt', required=False)
+    parser.add_argument('--batch_size', type=int, default=1, required=False)
 
     args = parser.parse_args()
 
     data_loader = DataLoader(
-        VideoTrainDataSet(path_load=ucf101_path_load(args.ucf101_dataset_path, args.ucf101_label_path)),
+        VideoTrainDataSet(
+            path_load=ucf101_path_load(args.ucf101_dataset_path, args.ucf101_label_path, args.ucf101_class_path)),
         batch_size=args.batch_size, shuffle=False
     )
 
