@@ -23,16 +23,16 @@ def ucf101_path_load(video_path: str, label_path: str) -> list:
 
 class VideoTrainDataSet(Dataset):  # torch.utils.data.Datasetを継承
 
-    def __init__(self, pre_processing: transforms.Compose = None, frame_num: int = 4, path_load: function = None):
+    def __init__(self, pre_processing: transforms.Compose = None, frame_num: int = 4, path_load: list = None):
 
         self.frame_num = frame_num
-        self.data_list = path_load(video_path)
+        self.data_list = path_load
 
         if pre_processing:
             self.pre_processing = pre_processing
         else:
             self.pre_processing = []
-            for p in [0.0, 0.1]:
+            for p in [0.0, 1.0]:
                 self.pre_processing.append(transforms.Compose([
                     transforms.RandomHorizontalFlip(p=p),  # ランダムで左右回転
                     transforms.ToTensor(),  # Tensor型へ変換
@@ -41,14 +41,15 @@ class VideoTrainDataSet(Dataset):  # torch.utils.data.Datasetを継承
 
     # イテレートするときに実行されるメソッド．ここをオーバーライドする必要がある．
     def __getitem__(self, index: int) -> tuple:
-        frame_list = os.listdir(self.data_list[index])
+        frame_list = os.listdir(self.data_list[index][0])
         video_len = len(frame_list)
         # {frame_index + 0, frame_index + 1, ..., frame_index + self.frame_num - 1}番号のフレームを取得するのに使う
         frame_index = randint(0, video_len - self.frame_num - 1)
+        frame_indices = range(frame_index, frame_index + self.frame_num)
         random_horizontal_flip = randint(0, 1)  # 0なら左右反転しない．1ならする
         pre_processing = lambda image_path: self.pre_processing[random_horizontal_flip](Image.open(image_path))
         # リスト内包表記で検索
-        frame_tensors = [pre_processing(os.path.join(self.data_list[index][0], frame_list[i])) for i in frame_index]
+        frame_tensors = [pre_processing(os.path.join(self.data_list[index][0], frame_list[i])) for i in frame_indices]
         video_tensor = torch.stack(frame_tensors)  # 3次元Tensorを含んだList -> 4次元Tensorに変換
         label = self.data_list[index][1]
         return video_tensor, label  # 入力画像とそのラベルをタプルとして返す
@@ -63,7 +64,6 @@ if __name__ == '__main__':  # UCF101データセットの読み込みテスト�
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--ucf101_dataset_path', type=str, required=True)
-    parser.add_argument('--subset', type=str, default='train', required=False)
     parser.add_argument('--ucf101_label_path', type=str, required=True)
     parser.add_argument('--batch_size', type=int, default=8, required=False)
 
@@ -85,5 +85,5 @@ if __name__ == '__main__':  # UCF101データセットの読み込みテスト�
 
     for input_images, input_label in data_loader:
         print(input_label)
-        for image in input_images:
-            image_show(image)
+        for images_per_batch in input_images:
+            image_show(images_per_batch)
