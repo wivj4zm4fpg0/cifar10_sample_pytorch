@@ -10,7 +10,7 @@ from torchvision.utils import make_grid
 
 
 # データセットの形式に合わせて新しく作る
-def ucf101_path_load(video_path: str, label_path: str, class_path: str) -> list:
+def ucf101_test_path_load(video_path: str, label_path: str, class_path: str) -> list:
     data_list = []
     class_dict = {}
     with open(class_path) as f:
@@ -24,8 +24,21 @@ def ucf101_path_load(video_path: str, label_path: str, class_path: str) -> list:
             data_list.append((os.path.join(video_path, label[:-4]), class_dict[os.path.split(label)[0]]))
     return data_list
 
+    # entirety_frame_list = os.listdir(self.data_list[index][0])
+    # video_len = len(entirety_frame_list)
+    # frame_indices = list(range(0, video_len - self.frame_num, self.frame_num))
+    # pre_processing = lambda image_path: self.pre_processing(Image.open(image_path))
+    # video_tensor_list = []
+    # for frame_start in frame_indices:
+    #     video_tensor = []
+    #     for i in range(frame_start, frame_start + self.frame_num):
+    #         video_tensor.append(pre_processing(os.path.join(self.data_list[index][0], entirety_frame_list[i])))
+    #     video_tensor_list.append(torch.stack(video_tensor))
+    # label = self.data_list[index][1]
+    # return video_tensor_list, label  # 入力画像とそのラベルをタプルとして返す
 
-class VideoTrainDataSet(Dataset):  # torch.utils.data.Datasetを継承
+
+class VideoTestDataSet(Dataset):  # torch.utils.data.Datasetを継承
 
     def __init__(self, pre_processing: transforms.Compose = None, frame_num: int = 4, path_load: list = None):
 
@@ -81,8 +94,8 @@ if __name__ == '__main__':  # UCF101データセットの読み込みテスト�
     args = parser.parse_args()
 
     data_loader = DataLoader(
-        VideoTrainDataSet(
-            path_load=ucf101_path_load(args.ucf101_dataset_path, args.ucf101_label_path, args.ucf101_class_path)),
+        VideoTestDataSet(
+            path_load=ucf101_test_path_load(args.ucf101_dataset_path, args.ucf101_label_path, args.ucf101_class_path)),
         batch_size=args.batch_size, shuffle=False
     )
 
@@ -95,8 +108,8 @@ if __name__ == '__main__':  # UCF101データセットの読み込みテスト�
             exit(0)
 
 
-    for i, (input_videos, input_label) in enumerate(data_loader):
+    for i, (input_videos, input_label, video_num) in enumerate(data_loader):
         if i % 5 != 0:
             continue
-        print(input_label)
+        print(f'{input_label=}')
         image_show(input_videos[0][0])

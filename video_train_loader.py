@@ -11,7 +11,7 @@ from torchvision.utils import make_grid
 
 
 # データセットの形式に合わせて新しく作る
-def ucf101_path_load(video_path: str, label_path: str) -> list:
+def ucf101_train_path_load(video_path: str, label_path: str) -> list:
     data_list = []
     with open(label_path) as f:
         label_path_list = [s.strip() for s in f.readlines()]
@@ -47,9 +47,16 @@ class VideoTrainDataSet(Dataset):  # torch.utils.data.Datasetを継承
         frame_index = randint(0, video_len - self.frame_num - 1)
         frame_indices = range(frame_index, frame_index + self.frame_num)
         random_horizontal_flip = randint(0, 1)  # 0なら左右反転しない．1ならする
-        pre_processing = lambda image_path: self.pre_processing[random_horizontal_flip](Image.open(image_path))
+        # pre_processing = lambda image_path: self.pre_processing[random_horizontal_flip](Image.open(image_path))
+        pre_processing = lambda image_path: self.pre_processing[random_horizontal_flip](image_path)
         # リスト内包表記で検索
-        frame_tensors = [pre_processing(os.path.join(self.data_list[index][0], frame_list[i])) for i in frame_indices]
+        frame_tensors = []
+        # print(f'{self.data_list[index][0]}')
+        for i in frame_indices:
+            img = Image.open(os.path.join(self.data_list[index][0], frame_list[i])).convert('RGB')
+            # print(f'{img=}')
+            frame_tensors.append(pre_processing(img))
+        # frame_tensors = [pre_processing(os.path.join(self.data_list[index][0], frame_list[i])) for i in frame_indices]
         video_tensor = torch.stack(frame_tensors)  # 3次元Tensorを含んだList -> 4次元Tensorに変換
         label = self.data_list[index][1]
         return video_tensor, label  # 入力画像とそのラベルをタプルとして返す
@@ -70,7 +77,7 @@ if __name__ == '__main__':  # UCF101データセットの読み込みテスト�
     args = parser.parse_args()
 
     data_loader = DataLoader(
-        VideoTrainDataSet(path_load=ucf101_path_load(args.ucf101_dataset_path, args.ucf101_label_path)),
+        VideoTrainDataSet(path_load=ucf101_train_path_load(args.ucf101_dataset_path, args.ucf101_label_path)),
         batch_size=args.batch_size, shuffle=False
     )
 

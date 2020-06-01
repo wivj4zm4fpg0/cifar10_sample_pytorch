@@ -92,6 +92,9 @@ for epoch in range(args.epoch_num):  # loop over the dataset multiple times
         optimizer.step()  # 重みを更新
 
         # 後処理
+        print(f'{outputs.shape=}')
+        # print(f'{max(outputs.data, 1).shap}')
+        print(f'{max(outputs.data, 1)=}')
         predicted = max(outputs.data, 1)[1]
         accuracy = (predicted == labels).sum().item() / train_batch_len
         epoch_accuracy += accuracy
