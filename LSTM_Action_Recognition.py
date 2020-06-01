@@ -37,7 +37,7 @@ train_batch_len = len(train_loader)
 test_batch_len = len(test_loader)
 
 # 初期設定
-Net = CNN_LSTM(args.class_num, pretrained=args.use_pretrained_model, bidirectional=False)  # resnet18を取得
+Net = CNN_LSTM(args.class_num, pretrained=args.use_pretrained_model, bidirectional=True)  # resnet18を取得
 criterion = nn.CrossEntropyLoss()  # Loss関数を定義
 optimizer = optim.SGD(Net.parameters(), lr=0.001, momentum=0.9)  # 重み更新方法を定義
 

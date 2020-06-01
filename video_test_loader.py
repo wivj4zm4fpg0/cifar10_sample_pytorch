@@ -24,25 +24,12 @@ def ucf101_test_path_load(video_path: str, label_path: str, class_path: str) -> 
             data_list.append((os.path.join(video_path, label[:-4]), class_dict[os.path.split(label)[0]]))
     return data_list
 
-    # entirety_frame_list = os.listdir(self.data_list[index][0])
-    # video_len = len(entirety_frame_list)
-    # frame_indices = list(range(0, video_len - self.frame_num, self.frame_num))
-    # pre_processing = lambda image_path: self.pre_processing(Image.open(image_path))
-    # video_tensor_list = []
-    # for frame_start in frame_indices:
-    #     video_tensor = []
-    #     for i in range(frame_start, frame_start + self.frame_num):
-    #         video_tensor.append(pre_processing(os.path.join(self.data_list[index][0], entirety_frame_list[i])))
-    #     video_tensor_list.append(torch.stack(video_tensor))
-    # label = self.data_list[index][1]
-    # return video_tensor_list, label  # 入力画像とそのラベルをタプルとして返す
-
 
 class VideoTestDataSet(Dataset):  # torch.utils.data.Datasetを継承
 
     def __init__(self, pre_processing: transforms.Compose = None, frame_num: int = 4, path_load: list = None):
 
-        self.frame_num = frame_num
+        self.frame_num = int(frame_num / 2)
         self.data_list = path_load
 
         if pre_processing:
@@ -55,27 +42,15 @@ class VideoTestDataSet(Dataset):  # torch.utils.data.Datasetを継承
 
     # イテレートするときに実行されるメソッド．ここをオーバーライドする必要がある．
     def __getitem__(self, index: int) -> tuple:
-        """
-        フレームの長さ->12, RNNへの入力数->4 の場合 出力タプルの1つ目は
-        [
-            tensor([image_001.jpg, image_002.jpg, image_003.jpg, image_004.jpg]),
-            tensor([image_005.jpg, image_006.jpg, image_007.jpg, image_008.jpg]),
-            tensor([image_009.jpg, image_010.jpg, image_011.jpg, image_012.jpg]),
-        ]
-        テストフェイズではこの3つのデータを入力して3つの出力を平均する
-        """
-        entirety_frame_list = os.listdir(self.data_list[index][0])
-        video_len = len(entirety_frame_list)
-        frame_indices = list(range(0, video_len - self.frame_num, self.frame_num))
-        pre_processing = lambda image_path: self.pre_processing(Image.open(image_path))
-        video_tensor_list = []
-        for frame_start in frame_indices:
-            video_tensor = []
-            for i in range(frame_start, frame_start + self.frame_num):
-                video_tensor.append(pre_processing(os.path.join(self.data_list[index][0], entirety_frame_list[i])))
-            video_tensor_list.append(torch.stack(video_tensor))
+        #  真ん中のフレームを抽出する
+        frame_list = os.listdir(self.data_list[index][0])
+        video_medium_len = int(len(frame_list) / 2)
+        frame_indices = list(range(video_medium_len - self.frame_num, video_medium_len + self.frame_num))
+        pre_processing = lambda image_path: self.pre_processing(Image.open(image_path).convert('RGB'))
+        video_tensor = [pre_processing(os.path.join(self.data_list[index][0], frame_list[i])) for i in frame_indices]
+        video_tensor = torch.stack(video_tensor)  # 3次元Tensorを含んだList -> 4次元Tensorに変換
         label = self.data_list[index][1]
-        return video_tensor_list, label  # 入力画像とそのラベルをタプルとして返す
+        return video_tensor, label  # 入力画像とそのラベルをタプルとして返す
 
     def __len__(self) -> int:  # データセットの数を返すようにする
         return len(self.data_list)
