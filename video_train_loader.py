@@ -47,7 +47,8 @@ class VideoTrainDataSet(Dataset):  # torch.utils.data.Datasetを継承
         frame_index = randint(0, video_len - self.frame_num - 1)
         frame_indices = range(frame_index, frame_index + self.frame_num)
         random_horizontal_flip = randint(0, 1)  # 0なら左右反転しない．1ならする
-        pre_processing = lambda image_path: self.pre_processing[random_horizontal_flip](Image.open(image_path))
+        pre_processing = lambda image_path: self.pre_processing[random_horizontal_flip](
+            Image.open(image_path).convert('RGB'))
         # リスト内包表記で検索
         video_tensor = [pre_processing(os.path.join(self.data_list[index][0], frame_list[i])) for i in frame_indices]
         video_tensor = torch.stack(video_tensor)  # 3次元Tensorを含んだList -> 4次元Tensorに変換
