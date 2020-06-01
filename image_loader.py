@@ -8,7 +8,7 @@ from torchvision import transforms
 from torchvision.utils import make_grid
 
 
-class dataSet(Dataset):  # torch.utils.data.Datasetを継承
+class ImageDataSet(Dataset):  # torch.utils.data.Datasetを継承
 
     def __init__(self, path: str, subset: str, pre_processing: transforms.Compose = None):
         assert subset == 'train' or subset == 'test'
@@ -53,7 +53,7 @@ if __name__ == '__main__':  # CIFAR10データセットの読み込みテスト�
     args = parser.parse_args()
 
     data_loader = DataLoader(
-        dataSet(path=args.dataset_path, subset=args.subset),
+        ImageDataSet(path=args.dataset_path, subset=args.subset),
         batch_size=args.batch_size, shuffle=False
     )
 

@@ -21,7 +21,7 @@ def ucf101_path_load(video_path: str, label_path: str) -> list:
     return data_list
 
 
-class dataSet(Dataset):  # torch.utils.data.Datasetを継承
+class VideoTrainDataSet(Dataset):  # torch.utils.data.Datasetを継承
 
     def __init__(self, pre_processing: transforms.Compose = None, frame_num: int = 4, path_load: function = None):
 
@@ -70,7 +70,7 @@ if __name__ == '__main__':  # UCF101データセットの読み込みテスト�
     args = parser.parse_args()
 
     data_loader = DataLoader(
-        dataSet(path_load=ucf101_path_load(args.ucf101_dataset_path, args.ucf101_label_path)),
+        VideoTrainDataSet(path_load=ucf101_path_load(args.ucf101_dataset_path, args.ucf101_label_path)),
         batch_size=args.batch_size, shuffle=False
     )
 

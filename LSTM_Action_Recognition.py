@@ -4,7 +4,7 @@ from torch import max, nn, no_grad, optim
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 
-from data_loader import dataSet
+from image_loader import ImageDataSet
 
 # コマンドライン引数を処理
 parser = argparse.ArgumentParser()
@@ -20,11 +20,11 @@ batch_size = args.batch_size
 
 # データセットを読み込む
 train_loader = DataLoader(
-    dataSet(path=args.dataset_path, subset='train'),
+    ImageDataSet(path=args.dataset_path, subset='train'),
     batch_size=batch_size, shuffle=True
 )
 test_loader = DataLoader(
-    dataSet(path=args.dataset_path, subset='test'),
+    ImageDataSet(path=args.dataset_path, subset='test'),
     batch_size=batch_size, shuffle=False
 )
 train_batch_len = len(train_loader)
