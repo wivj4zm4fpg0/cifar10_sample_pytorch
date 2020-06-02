@@ -13,9 +13,9 @@ def resize_image(input_dir: str, width: int, height: int, depth: int):
             if not '.jpg' in dir:
                 continue
             img = cv2.imread(image_path)
+            print(f'{image_path=}')
             if img.shape[0] == height and img.shape[1] == width:
                 continue
-            print(f'{image_path=}')
             img = cv2.resize(img, (width, height))
             cv2.imwrite(image_path, img)
 

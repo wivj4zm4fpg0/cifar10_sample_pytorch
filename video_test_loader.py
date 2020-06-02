@@ -43,7 +43,6 @@ class VideoTestDataSet(Dataset):  # torch.utils.data.Datasetを継承
     # イテレートするときに実行されるメソッド．ここをオーバーライドする必要がある．
     def __getitem__(self, index: int) -> tuple:
         #  真ん中のフレームを抽出する
-        print(f'{self.data_list[index][0]}')
         frame_list = os.listdir(self.data_list[index][0])
         video_medium_len = int(len(frame_list) / 2)
         frame_indices = list(range(video_medium_len - self.frame_num, video_medium_len + self.frame_num))
