@@ -51,6 +51,7 @@ test_batch_len = len(test_loader)
 Net = CNN_LSTM(args.class_num, pretrained=args.use_pretrained_model, bidirectional=args.use_bidirectional)
 criterion = nn.CrossEntropyLoss()  # Loss関数を定義
 optimizer = optim.Adam(Net.parameters(), lr=args.learning_rate)  # 重み更新方法を定義
+scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer)  # ロス値が変わらなくなったときに学習係数を下げる
 
 # ログファイルの生成
 with open(log_train_path, mode='w') as f:
@@ -88,6 +89,7 @@ def test(inputs, labels):
     with no_grad():  # 勾配計算が行われないようにする
         outputs = Net(inputs)  # この記述方法で順伝搬が行われる
         loss = criterion(outputs[:, frame_num - 1, :], labels)  # Loss値を計算
+        scheduler.step(loss.item())
     return outputs, loss.item()
 
 
@@ -110,12 +112,12 @@ def estimate(data_loader, calcu, subset: str, epoch_num: int, log_file: str, bat
         accuracy = (predicted == labels).sum().item() / batch_len
         epoch_accuracy += accuracy
         epoch_loss += loss
-        print(f'{subset}: epoch = {epoch_num + 1}, i = [{i}/{batch_len - 1}], {loss=}, {accuracy=}')
+        print(f'{subset}: epoch = {epoch_num + 1}, i = [{i}/{batch_len - 1}], {loss = }, {accuracy = }')
 
     loss_avg = epoch_loss / batch_len
     accuracy_avg = epoch_accuracy / batch_len
     epoch_time = time() - start_time
-    print(f'{subset}: epoch = {epoch_num + 1}, {loss_avg=}, {accuracy_avg=}, {epoch_time=}')
+    print(f'{subset}: epoch = {epoch_num + 1}, {loss_avg = }, {accuracy_avg = }, {epoch_time = }')
     with open(log_file, mode='a') as f:
         f.write(f'{epoch_num + 1},{loss_avg},{accuracy_avg},{epoch_time}\n')
 
