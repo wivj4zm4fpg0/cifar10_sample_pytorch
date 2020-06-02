@@ -23,6 +23,8 @@ parser.add_argument('--use_cuda', action='store_true')
 parser.add_argument('--use_pretrained_model', action='store_true')
 parser.add_argument('--log_train_path', type=str, default='log_train.csv', required=False)
 parser.add_argument('--log_test_path', type=str, default='log_test.csv', required=False)
+parser.add_argument('--use_bidirectional', action='store_true')
+parser.add_argument('--learning_rate', type=int, default=0.01, required=False)
 args = parser.parse_args()
 batch_size = args.batch_size
 frame_num = args.frame_num
@@ -43,9 +45,10 @@ train_batch_len = len(train_loader)
 test_batch_len = len(test_loader)
 
 # 初期設定
-Net = CNN_LSTM(args.class_num, pretrained=args.use_pretrained_model, bidirectional=True)  # resnet18を取得
+# resnet18を取得
+Net = CNN_LSTM(args.class_num, pretrained=args.use_pretrained_model, bidirectional=args.use_bidirectional)
 criterion = nn.CrossEntropyLoss()  # Loss関数を定義
-optimizer = optim.SGD(Net.parameters(), lr=0.001, momentum=0.9)  # 重み更新方法を定義
+optimizer = optim.Adam(Net.parameters(), lr=args.learning_rate)  # 重み更新方法を定義
 
 # ログファイルの生成
 with open(log_train_path, mode='w') as f:
@@ -71,6 +74,7 @@ def train(inputs, labels):
     最後のシーケンスだけを抽出する．extract only last of sequence.
     (batch_size, seq_num, input_size) -> (batch_size, input_size)
     """
+    optimizer.zero_grad()
     loss = criterion(outputs[:, frame_num - 1, :], labels)  # Loss値を計算
     loss.backward()  # 逆伝搬で勾配を求める
     optimizer.step()  # 重みを更新
@@ -104,10 +108,10 @@ def estimate(data_loader, calcu, subset: str, epoch_num: int, log_file: str, bat
         accuracy = (predicted == labels).sum().item() / batch_len
         epoch_accuracy += accuracy
         epoch_loss += loss
-        print(f'{subset}: i = [{i}/{batch_len - 1}], {loss=}, {accuracy=}')
+        print(f'{subset}: epoch = {epoch_num + 1}, i = [{i}/{batch_len - 1}], {loss=}, {accuracy=}')
 
-    loss_avg = epoch_loss / test_batch_len
-    accuracy_avg = epoch_accuracy / test_batch_len
+    loss_avg = epoch_loss / batch_len
+    accuracy_avg = epoch_accuracy / batch_len
     epoch_time = time() - start_time
     print(f'{subset}: epoch = {epoch_num + 1}, {loss_avg=}, {accuracy_avg=}, {epoch_time=}')
     with open(log_file, mode='a') as f:
