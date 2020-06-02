@@ -1,4 +1,5 @@
 import argparse
+import json
 from time import time
 
 from torch import max, nn, no_grad, optim
@@ -11,25 +12,26 @@ from video_train_loader import VideoTrainDataSet, ucf101_train_path_load
 # コマンドライン引数を処理
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset_path', type=str, required=True)
+parser.add_argument('--output_dir', type=str, required=True)
 parser.add_argument('--train_label_path', type=str, required=True)
 parser.add_argument('--test_label_path', type=str, required=True)
 parser.add_argument('--class_path', type=str, required=True)
 parser.add_argument('--class_num', type=int, default=101, required=False)
 parser.add_argument('--epoch_num', type=int, default=100, required=False)
-parser.add_argument('--eval_interval', type=int, default=10, required=False)
 parser.add_argument('--batch_size', type=int, default=4, required=False)
 parser.add_argument('--frame_num', type=int, default=4, required=False)
 parser.add_argument('--use_cuda', action='store_true')
 parser.add_argument('--use_pretrained_model', action='store_true')
-parser.add_argument('--log_train_path', type=str, default='log_train.csv', required=False)
-parser.add_argument('--log_test_path', type=str, default='log_test.csv', required=False)
 parser.add_argument('--use_bidirectional', action='store_true')
 parser.add_argument('--learning_rate', type=int, default=0.01, required=False)
+
 args = parser.parse_args()
 batch_size = args.batch_size
 frame_num = args.frame_num
-log_train_path = args.log_train_path
-log_test_path = args.log_test_path
+log_train_path = os.path.join(args.output_dir, 'log_train.csv')
+log_test_path = os.path.join(args.otuput_dir, 'log_test.csv')
+json.dump(vars(args), open(os.path.join(args.output_dir, 'args.json'), mode='w'),
+          ensure_ascii=False, indent=4, sort_keys=True, separators=(',', ': '))
 
 # データセットを読み込む
 train_loader = DataLoader(
