@@ -7,12 +7,11 @@ import torch
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
-from torchvision.transforms import RandomCrop, RandomRotation
 from torchvision.transforms import functional as F
 from torchvision.utils import make_grid
 
 
-class VideoRandomCrop(RandomCrop):
+class VideoRandomCrop(transforms.RandomCrop):
     def __call__(self, img: Image) -> Image:
         if self.padding is not None:
             img = F.pad(img, self.padding, self.fill, self.padding_mode)
@@ -29,10 +28,10 @@ class VideoRandomCrop(RandomCrop):
         return F.crop(img, i, j, h, w)
 
     def set_param(self, img: Image):
-        self.ijhw: Tuple = RandomCrop.get_params(img, self.size)
+        self.ijhw: Tuple = transforms.RandomCrop.get_params(img, self.size)
 
 
-class VideoRandomRotation(RandomRotation):
+class VideoRandomRotation(transforms.RandomRotation):
     def __call__(self, img: Image) -> Image:
         angle = self.degree
 

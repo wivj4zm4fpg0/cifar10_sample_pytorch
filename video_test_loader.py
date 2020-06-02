@@ -27,7 +27,8 @@ def ucf101_test_path_load(video_path: str, label_path: str, class_path: str) -> 
 
 class VideoTestDataSet(Dataset):  # torch.utils.data.Datasetを継承
 
-    def __init__(self, pre_processing: transforms.Compose = None, frame_num: int = 4, path_load: list = None):
+    def __init__(self, pre_processing: transforms.Compose = None, frame_num: int = 4, path_load: list = None,
+                 center_crop_size: int = 224):
 
         self.frame_num = int(frame_num / 2)
         self.data_list = path_load
@@ -36,6 +37,7 @@ class VideoTestDataSet(Dataset):  # torch.utils.data.Datasetを継承
             self.pre_processing = pre_processing
         else:
             self.pre_processing = transforms.Compose([
+                transforms.CenterCrop(center_crop_size),
                 transforms.ToTensor(),  # Tensor型へ変換
                 transforms.Normalize((0, 0, 0), (1, 1, 1))  # 画素値が0と1の間になるように正規化
             ])
@@ -83,6 +85,7 @@ if __name__ == '__main__':  # UCF101データセットの読み込みテスト�
             exit(0)
 
 
-    for i, (input_videos, input_label) in enumerate(data_loader):
-        print(f'{input_label=}')
-        image_show(input_videos)
+    for input_images, input_label in data_loader:
+        print(input_label)
+        for images_per_batch in input_images:
+            image_show(images_per_batch)
