@@ -43,6 +43,7 @@ class VideoTestDataSet(Dataset):  # torch.utils.data.Datasetを継承
     # イテレートするときに実行されるメソッド．ここをオーバーライドする必要がある．
     def __getitem__(self, index: int) -> tuple:
         #  真ん中のフレームを抽出する
+        print(f'{self.data_list[index][0]}')
         frame_list = os.listdir(self.data_list[index][0])
         video_medium_len = int(len(frame_list) / 2)
         frame_indices = list(range(video_medium_len - self.frame_num, video_medium_len + self.frame_num))
@@ -83,8 +84,6 @@ if __name__ == '__main__':  # UCF101データセットの読み込みテスト�
             exit(0)
 
 
-    for i, (input_videos, input_label, video_num) in enumerate(data_loader):
-        if i % 5 != 0:
-            continue
+    for i, (input_videos, input_label) in enumerate(data_loader):
         print(f'{input_label=}')
-        image_show(input_videos[0][0])
+        image_show(input_videos)
