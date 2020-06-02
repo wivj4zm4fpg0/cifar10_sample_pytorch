@@ -1,5 +1,5 @@
 import os
-from random import randint
+from random import randint, uniform
 
 import cv2
 import numpy as np
@@ -7,7 +7,39 @@ import torch
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
+from torchvision.transforms import RandomCrop, RandomRotation
+from torchvision.transforms import functional as F
 from torchvision.utils import make_grid
+
+
+class VideoRandomCrop(RandomCrop):
+    def __call__(self, img: Image) -> Image:
+        if self.padding is not None:
+            img = F.pad(img, self.padding, self.fill, self.padding_mode)
+
+        # pad the width if needed
+        if self.pad_if_needed and img.size[0] < self.size[1]:
+            img = F.pad(img, (self.size[1] - img.size[0], 0), self.fill, self.padding_mode)
+        # pad the height if needed
+        if self.pad_if_needed and img.size[1] < self.size[0]:
+            img = F.pad(img, (0, self.size[0] - img.size[1]), self.fill, self.padding_mode)
+
+        i, j, h, w = self.ijhw
+
+        return F.crop(img, i, j, h, w)
+
+    def set_param(self, img: Image):
+        self.ijhw: Tuple = RandomCrop.get_params(img, self.size)
+
+
+class VideoRandomRotation(RandomRotation):
+    def __call__(self, img: Image) -> Image:
+        angle = self.degree
+
+        return F.rotate(img, angle, self.resample, self.expand, self.center, self.fill)
+
+    def set_degree(self, degree: int = 360):
+        self.degree = uniform(0, degree)
 
 
 # データセットの形式に合わせて新しく作る
@@ -23,7 +55,8 @@ def ucf101_train_path_load(video_path: str, label_path: str) -> list:
 
 class VideoTrainDataSet(Dataset):  # torch.utils.data.Datasetを継承
 
-    def __init__(self, pre_processing: transforms.Compose = None, frame_num: int = 4, path_load: list = None):
+    def __init__(self, pre_processing: transforms.Compose = None, frame_num: int = 4, path_load: list = None,
+                 random_crop_size: int = 224):
 
         self.frame_num = frame_num
         self.data_list = path_load
@@ -31,13 +64,13 @@ class VideoTrainDataSet(Dataset):  # torch.utils.data.Datasetを継承
         if pre_processing:
             self.pre_processing = pre_processing
         else:
-            self.pre_processing = []
-            for p in [0.0, 1.0]:
-                self.pre_processing.append(transforms.Compose([
-                    transforms.RandomHorizontalFlip(p=p),  # ランダムで左右回転
-                    transforms.ToTensor(),  # Tensor型へ変換
-                    transforms.Normalize((0, 0, 0), (1, 1, 1))  # 画素値が0と1の間になるように正規化
-                ]))
+            self.pre_processing = transforms.Compose([
+                VideoRandomRotation(0),
+                VideoRandomCrop(random_crop_size),
+                transforms.RandomHorizontalFlip(),  # ランダムで左右回転
+                transforms.ToTensor(),  # Tensor型へ変換
+                transforms.Normalize((0, 0, 0), (1, 1, 1))  # 画素値が0と1の間になるように正規化
+            ])
 
     # イテレートするときに実行されるメソッド．ここをオーバーライドする必要がある．
     def __getitem__(self, index: int) -> tuple:
@@ -46,9 +79,14 @@ class VideoTrainDataSet(Dataset):  # torch.utils.data.Datasetを継承
         # {frame_index + 0, frame_index + 1, ..., frame_index + self.frame_num - 1}番号のフレームを取得するのに使う
         frame_index = randint(0, video_len - self.frame_num - 1)
         frame_indices = range(frame_index, frame_index + self.frame_num)
-        random_horizontal_flip = randint(0, 1)  # 0なら左右反転しない．1ならする
-        pre_processing = lambda image_path: self.pre_processing[random_horizontal_flip](
-            Image.open(image_path).convert('RGB'))
+
+        self.pre_processing.transforms[0].set_degree()  # RandomRotationの回転角度を設定
+        # RandomCropの設定を行う. 引数に画像サイズが必要なので最初のフレームを渡す
+        self.pre_processing.transforms[1].set_param(Image.open(os.path.join(self.data_list[index][0], frame_list[0])))
+        # RandomHorizontalFlipのソースコード参照．pの値を設定．0なら反転しない，1なら反転する
+        self.pre_processing.transforms[2].p = randint(0, 1)
+
+        pre_processing = lambda image_path: self.pre_processing(Image.open(image_path).convert('RGB'))
         # リスト内包表記で検索
         video_tensor = [pre_processing(os.path.join(self.data_list[index][0], frame_list[i])) for i in frame_indices]
         video_tensor = torch.stack(video_tensor)  # 3次元Tensorを含んだList -> 4次元Tensorに変換
