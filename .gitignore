@@ -5,3 +5,5 @@ cifar10png
 cifar10png/*
 cifar10png_small
 cifar10png_small/*
+logs
+logs/*
