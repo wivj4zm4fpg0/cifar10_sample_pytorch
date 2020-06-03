@@ -25,7 +25,7 @@ parser.add_argument('--output_dir', type=str, required=True)
 args = parser.parse_args()
 batch_size = args.batch_size
 log_train_path = os.path.join(args.output_dir, 'log_train.csv')
-log_test_path = os.path.join(args.otuput_dir, 'log_test.csv')
+log_test_path = os.path.join(args.output_dir, 'log_test.csv')
 json.dump(vars(args), open(os.path.join(args.output_dir, 'args.json'), mode='w'),
           ensure_ascii=False, indent=4, sort_keys=True, separators=(',', ': '))
 
