@@ -54,14 +54,11 @@ test_iterate_len = len(test_loader)
 # resnet18を取得
 Net = CNN_LSTM(args.class_num, pretrained=args.use_pretrained_model, bidirectional=args.use_bidirectional)
 criterion = nn.CrossEntropyLoss()  # Loss関数を定義
-# optimizer = optim.Adam(Net.parameters(), lr=args.learning_rate)  # 重み更新方法を定義
-optimizer = optim.SGD(Net.parameters(), lr=args.learning_rate, momentum=0.9)  # 重み更新方法を定義
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer)  # ロス値が変わらなくなったときに学習係数を下げる
+optimizer = optim.Adam(Net.parameters(), lr=args.learning_rate)  # 重み更新方法を定義
 if args.model_load_path:
     checkpoint = load(args.model_load_path)
     Net.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-    scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
 
 # ログファイルの生成
 with open(log_train_path, mode='w') as f:
@@ -90,7 +87,6 @@ def train(inputs, labels):
     optimizer.zero_grad()
     loss = criterion(outputs[:, frame_num - 1, :], labels)  # Loss値を計算
     loss.backward()  # 逆伝搬で勾配を求める
-    optimizer.step()  # 重みを更新
     return outputs, loss.item()
 
 
@@ -145,5 +141,4 @@ if args.model_save_path:
         'epoch': args.epoch_num,
         'model_state_dict': Net.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
-        'scheduler_state_dict': scheduler.state_dict()
     }, args.model_save_path)
