@@ -3,7 +3,7 @@ import json
 import os
 from time import time
 
-from torch import max, nn, no_grad, optim, save, load
+from torch import max, nn, no_grad, optim, save, load, mean
 from torch.utils.data import DataLoader
 
 from CNN_LSTM_Model import CNN_LSTM
@@ -76,7 +76,7 @@ else:
 
 # 双方向の有無で出力の取り方を変える
 if args.use_bidirectional:
-    reshape_output = lambda x: torch.mean(x, 1) # シーケンスの平均を取る
+    reshape_output = lambda x: mean(x, 1) # シーケンスの平均を取る
 else:
     reshape_output = lambda x: x[:, -1, :]  # シーケンスの最後を取る
 
