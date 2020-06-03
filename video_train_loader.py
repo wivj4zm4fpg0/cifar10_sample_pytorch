@@ -80,7 +80,7 @@ if __name__ == '__main__':  # UCF101データセットの読み込みテスト�
 
     data_loader = DataLoader(
         VideoTrainDataSet(path_load=ucf101_train_path_load(args.ucf101_dataset_path, args.ucf101_label_path)),
-        batch_size=args.batch_size, shuffle=False
+        batch_size=args.batch_size, shuffle=True
     )
 
 
