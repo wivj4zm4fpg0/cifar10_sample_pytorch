@@ -87,6 +87,7 @@ def train(inputs, labels):
     optimizer.zero_grad()
     loss = criterion(outputs[:, frame_num - 1, :], labels)  # Loss値を計算
     loss.backward()  # 逆伝搬で勾配を求める
+    optimizer.step()  # 重みを更新
     return outputs, loss.item()
 
 
@@ -95,7 +96,6 @@ def test(inputs, labels):
     with no_grad():  # 勾配計算が行われないようにする
         outputs = Net(inputs)  # この記述方法で順伝搬が行われる
         loss = criterion(outputs[:, frame_num - 1, :], labels)  # Loss値を計算
-        scheduler.step(loss.item())
     return outputs, loss.item()
 
 
