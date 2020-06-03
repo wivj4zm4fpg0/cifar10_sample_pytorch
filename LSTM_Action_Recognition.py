@@ -124,5 +124,7 @@ def estimate(data_loader, calcu, subset: str, epoch_num: int, log_file: str, bat
 
 # 推論を実行
 for epoch in range(args.epoch_num):
+    Net.train()
     estimate(train_loader, train, 'train', epoch, log_train_path, train_batch_len)
+    Net.eval()
     estimate(test_loader, test, 'test', epoch, log_test_path, test_batch_len)

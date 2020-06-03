@@ -8,7 +8,7 @@ from PIL import Image
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.utils import make_grid
-
+from natsort import natsorted
 from video_train_loader import VideoTrainDataSet
 
 
@@ -34,7 +34,8 @@ class VideoSortTrainDataSet(VideoTrainDataSet):  # video_train_loader.VideoTrain
 
     # イテレートするときに実行されるメソッド．ここをオーバーライドする必要がある．
     def __getitem__(self, index: int) -> tuple:
-        frame_list = [os.path.join(self.data_list[index], frame) for frame in os.listdir(self.data_list[index])]
+        frame_list = \
+            [os.path.join(self.data_list[index], frame) for frame in natsorted(os.listdir(self.data_list[index]))]
         frame_list = [frame for frame in frame_list if '.jpg' in frame or '.png' in frame]
         video_len = len(frame_list)
         # {frame_index + 0, frame_index + 1, ..., frame_index + self.frame_num - 1}番号のフレームを取得するのに使う

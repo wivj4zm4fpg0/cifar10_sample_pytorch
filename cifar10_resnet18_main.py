@@ -1,6 +1,6 @@
 import argparse
 
-from torch import max, nn, no_grad, optim
+from torch import max, nn, no_grad, optim, save, load
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
 
@@ -15,6 +15,8 @@ parser.add_argument('--eval_interval', type=int, default=10, required=False)
 parser.add_argument('--batch_size', type=int, default=1028, required=False)
 parser.add_argument('--use_cuda', action='store_true')
 parser.add_argument('--use_pretrained_model', action='store_true')
+parser.add_argument('--model_save_path', type=str, required=False)
+parser.add_argument('--model_load_path', type=str, required=False)
 args = parser.parse_args()
 batch_size = args.batch_size
 
@@ -36,6 +38,11 @@ Net.fc = nn.Linear(512, args.class_num)  # 最後の全結合層の出力はク�
 criterion = nn.CrossEntropyLoss()  # Loss関数を定義
 optimizer = optim.SGD(Net.parameters(), lr=0.001, momentum=0.9)  # 重み更新方法を定義
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer)  # スケジューラを定義
+if args.model_load_path:
+    checkpoint = load(args.model_load_path)
+    Net.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
 
 # CUDA環境の有無で処理を変更
 if args.use_cuda:
@@ -73,6 +80,7 @@ def test():
         scheduler.step(loss_avg)  # スケジューラを更新
         accuracy_avg = epoch_accuracy / test_batch_len
         print(f'test: {loss_avg = }, {accuracy_avg = }')
+        Net.train()
 
 
 # 訓練を実行．指定数epoch毎にテスト関数を実行
@@ -105,4 +113,12 @@ for epoch in range(args.epoch_num):  # loop over the dataset multiple times
     print(f'epoch = {epoch + 1}, {loss_avg = }, {accuracy_avg = }')
 
     if epoch % args.eval_interval == 0:  # 指定数epoch毎にテストを実行
+        Net.eval()
         test()
+
+if args.model_save_path:
+    save({
+        'model_state_dict': Net.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'scheduler_state_dict': scheduler.state_dict()
+    }, args.model_save_path)
