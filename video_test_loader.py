@@ -37,7 +37,7 @@ class VideoTestDataSet(Dataset):  # torch.utils.data.Datasetを継承
             self.pre_processing = pre_processing
         else:
             self.pre_processing = transforms.Compose([
-                transforms.CenterCrop(center_crop_size),
+                # transforms.CenterCrop(center_crop_size),
                 transforms.ToTensor(),  # Tensor型へ変換
                 transforms.Normalize((0, 0, 0), (1, 1, 1))  # 画素値が0と1の間になるように正規化
             ])
