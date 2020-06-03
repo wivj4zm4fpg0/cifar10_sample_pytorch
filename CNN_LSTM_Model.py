@@ -25,11 +25,13 @@ class CNN_LSTM(nn.Module):
         # nn.init.kaiming_normal_(self.fc.weight)
 
         if bidirectional:
-            self.lstm1 = nn.LSTM(512, 1024, bidirectional=True, batch_first=True)
-            self.lstm2 = nn.LSTM(2048, 2048, bidirectional=True, batch_first=True)
+            self.lstm = nn.LSTM(512, 2048, bidirectional=True, num_layers=2, batch_first=True)
+            # self.lstm1 = nn.LSTM(512, 1024, bidirectional=True, batch_first=True)
+            # self.lstm2 = nn.LSTM(2048, 2048, bidirectional=True, batch_first=True)
         else:
-            self.lstm1 = nn.LSTM(512, 2048, batch_first=True)
-            self.lstm2 = nn.LSTM(2048, 4096, batch_first=True)
+            self.lstm = nn.LSTM(512, 4096, bidirectional=False, num_layers=2, batch_first=True)
+            # self.lstm1 = nn.LSTM(512, 2048, batch_first=True)
+            # self.lstm2 = nn.LSTM(2048, 4096, batch_first=True)
 
         self.fc = nn.Linear(4096, class_num)
         nn.init.kaiming_normal_(self.fc.weight)
@@ -57,8 +59,9 @@ class CNN_LSTM(nn.Module):
         #     cnn = self.fc_pre(cnn)
         #     fs[i, :, :] = cnn
 
-        x = self.lstm1(x)[0]
-        x = self.lstm2(x)[0]
+        # x = self.lstm1(x)[0]
+        # x = self.lstm2(x)[0]
+        x = self.lstm(x)[0]
         # x, hidden = self.lstm(x, hidden)
         # x, hidden = self.lstm(fs, hidden)
         x = self.fc(x)  # (シーケンスの長さ, バッチサイズ, クラス数)が出力される
