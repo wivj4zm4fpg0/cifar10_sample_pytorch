@@ -24,7 +24,7 @@ parser.add_argument('--frame_num', type=int, default=4, required=False)
 parser.add_argument('--use_cuda', action='store_true')
 parser.add_argument('--use_pretrained_model', action='store_true')
 parser.add_argument('--use_bidirectional', action='store_true')
-parser.add_argument('--learning_rate', type=int, default=0.01, required=False)
+parser.add_argument('--learning_rate', type=float, default=0.01, required=False)
 parser.add_argument('--model_save_path', type=str, required=False)
 parser.add_argument('--model_load_path', type=str, required=False)
 
