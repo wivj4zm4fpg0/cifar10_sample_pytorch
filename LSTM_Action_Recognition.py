@@ -74,6 +74,12 @@ if args.use_cuda:
 else:
     device = 'cpu'
 
+# 双方向の有無で出力の取り方を変える
+if args.use_bidirectional:
+    reshape_output = lambda x: torch.mean(x, 1) # シーケンスの平均を取る
+else:
+    reshape_output = lambda x: x[:, -1, :]  # シーケンスの最後を取る
+
 
 # 訓練を行う
 def train(inputs, labels):
@@ -85,7 +91,7 @@ def train(inputs, labels):
     (batch_size, seq_num, input_size) -> (batch_size, input_size)
     """
     optimizer.zero_grad()
-    loss = criterion(outputs[:, frame_num - 1, :], labels)  # Loss値を計算
+    loss = criterion(reshape_output(x), labels)  # Loss値を計算
     loss.backward()  # 逆伝搬で勾配を求める
     optimizer.step()  # 重みを更新
     return outputs, loss.item()
@@ -95,7 +101,7 @@ def train(inputs, labels):
 def test(inputs, labels):
     with no_grad():  # 勾配計算が行われないようにする
         outputs = Net(inputs)  # この記述方法で順伝搬が行われる
-        loss = criterion(outputs[:, frame_num - 1, :], labels)  # Loss値を計算
+        loss = criterion(reshape_output(x), labels)  # Loss値を計算
     return outputs, loss.item()
 
 
@@ -114,7 +120,7 @@ def estimate(data_loader, calcu, subset: str, epoch_num: int, log_file: str, ite
         outputs, loss = calcu(inputs, labels)
 
         # 後処理
-        predicted = max(outputs.data[:, frame_num - 1, :], 1)[1]
+        predicted = max(reshape_output(x), 1)[1]
         accuracy = (predicted == labels).sum().item() / batch_size
         epoch_accuracy += accuracy
         epoch_loss += loss
