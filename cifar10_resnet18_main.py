@@ -13,8 +13,7 @@ from image_loader import ImageDataSet
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset_path', type=str, required=True)
 parser.add_argument('--class_num', type=int, default=10, required=False)
-parser.add_argument('--epoch_num', type=int, default=100, required=False)
-parser.add_argument('--eval_interval', type=int, default=10, required=False)
+parser.add_argument('--epoch_num', type=int, default=20, required=False)
 parser.add_argument('--batch_size', type=int, default=1028, required=False)
 parser.add_argument('--use_cuda', action='store_true')
 parser.add_argument('--use_pretrained_model', action='store_true')
@@ -28,6 +27,7 @@ log_train_path = os.path.join(args.output_dir, 'log_train.csv')
 log_test_path = os.path.join(args.output_dir, 'log_test.csv')
 json.dump(vars(args), open(os.path.join(args.output_dir, 'args.json'), mode='w'),
           ensure_ascii=False, indent=4, sort_keys=True, separators=(',', ': '))
+os.makedirs(args.output_dir, exist_ok=True)
 
 # データセットを読み込む
 train_loader = DataLoader(
@@ -38,8 +38,8 @@ test_loader = DataLoader(
     ImageDataSet(path=args.dataset_path, subset='test'),
     batch_size=batch_size, shuffle=False
 )
-train_batch_len = len(train_loader)
-test_batch_len = len(test_loader)
+train_iterate_len = len(train_loader)
+test_iterate_len = len(test_loader)
 
 # 初期設定
 Net = resnet18(pretrained=args.use_pretrained_model)  # resnet18を取得
@@ -94,7 +94,7 @@ def test(inputs, labels):
 
 
 # 推論を行う
-def estimate(data_loader, calcu, subset: str, epoch_num: int, log_file: str, batch_len: int):
+def estimate(data_loader, calcu, subset: str, epoch_num: int, log_file: str, iterate_len: int):
     epoch_loss = 0
     epoch_accuracy = 0
     start_time = time()
@@ -109,13 +109,13 @@ def estimate(data_loader, calcu, subset: str, epoch_num: int, log_file: str, bat
 
         # 後処理
         predicted = max(outputs.data, 1)[1]
-        accuracy = (predicted == labels).sum().item() / batch_len
+        accuracy = (predicted == labels).sum().item() / batch_size
         epoch_accuracy += accuracy
         epoch_loss += loss
-        print(f'{subset}: epoch = {epoch_num + 1}, i = [{i}/{batch_len - 1}], {loss = }, {accuracy = }')
+        print(f'{subset}: epoch = {epoch_num + 1}, i = [{i}/{iterate_len - 1}], {loss = }, {accuracy = }')
 
-    loss_avg = epoch_loss / batch_len
-    accuracy_avg = epoch_accuracy / batch_len
+    loss_avg = epoch_loss / iterate_len
+    accuracy_avg = epoch_accuracy / iterate_len
     epoch_time = time() - start_time
     learning_rate = optimizer.state_dict()['param_groups'][0]['lr']
     print(f'{subset}: epoch = {epoch_num + 1}, {loss_avg = }, {accuracy_avg = }, {epoch_time = }, {learning_rate = }')
@@ -126,9 +126,9 @@ def estimate(data_loader, calcu, subset: str, epoch_num: int, log_file: str, bat
 # 推論を実行
 for epoch in range(args.epoch_num):
     Net.train()
-    estimate(train_loader, train, 'train', epoch, log_train_path, train_batch_len)
+    estimate(train_loader, train, 'train', epoch, log_train_path, train_iterate_len)
     Net.eval()
-    estimate(test_loader, test, 'test', epoch, log_test_path, test_batch_len)
+    estimate(test_loader, test, 'test', epoch, log_test_path, test_iterate_len)
 
 if args.model_save_path:
     save({
@@ -137,68 +137,3 @@ if args.model_save_path:
         'optimizer_state_dict': optimizer.state_dict(),
         'scheduler_state_dict': scheduler.state_dict()
     }, args.model_save_path)
-
-#
-# # テスト用の関数を用意
-# def test():
-#     with no_grad():  # 勾配計算が行われなくなる
-#
-#         epoch_loss = 0
-#         epoch_accuracy = 0
-#
-#         for i, data in enumerate(test_loader):
-#             # 前処理
-#             inputs, labels = data
-#             labels = labels.to(device, non_blocking=True)
-#
-#             # 演算
-#             outputs = Net(inputs)  # この記述方法で順伝搬が行われる
-#             loss = criterion(outputs, labels)  # Loss値を計算
-#
-#             # 後処理
-#             predicted = max(outputs.data, 1)[1]
-#             accuracy = (predicted == labels).sum().item() / test_batch_len
-#             epoch_accuracy += accuracy
-#             epoch_loss += loss.item()
-#             print(f'test: i = [{i}/{test_batch_len - 1}], loss = {loss.item()}, {accuracy = }')
-#
-#         loss_avg = epoch_loss / test_batch_len
-#         scheduler.step(loss_avg)  # スケジューラを更新
-#         accuracy_avg = epoch_accuracy / test_batch_len
-#         print(f'test: {loss_avg = }, {accuracy_avg = }')
-#         Net.train()
-#
-#
-# # 訓練を実行．指定数epoch毎にテスト関数を実行
-# for epoch in range(args.epoch_num):  # loop over the dataset multiple times
-#
-#     epoch_loss = 0
-#     epoch_accuracy = 0
-#
-#     for i, data in enumerate(train_loader):  # データセットから1バッチ分取り出す
-#         # 前処理
-#         inputs, labels = data  # 入力データを取得
-#         optimizer.zero_grad()  # 勾配を初期化
-#         labels = labels.to(device, non_blocking=True)
-#
-#         # 演算開始
-#         outputs = Net(inputs)  # この記述方法で順伝搬が行われる
-#         loss = criterion(outputs, labels)  # Loss値を計算
-#         loss.backward()  # 逆伝搬で勾配を求める
-#         optimizer.step()  # 重みを更新
-#
-#         # 後処理
-#         predicted = max(outputs.data, 1)[1]
-#         accuracy = (predicted == labels).sum().item() / train_batch_len
-#         epoch_accuracy += accuracy
-#         epoch_loss += loss.item()
-#         print(f'epoch = {epoch + 1}, i = [{i}/{train_batch_len - 1}], loss = {loss.item()}, {accuracy = }')
-#
-#     loss_avg = epoch_loss / train_batch_len
-#     accuracy_avg = epoch_accuracy / train_batch_len
-#     print(f'epoch = {epoch + 1}, {loss_avg = }, {accuracy_avg = }')
-#
-#     if epoch % args.eval_interval == 0:  # 指定数epoch毎にテストを実行
-#         Net.eval()
-#         test()
-#
