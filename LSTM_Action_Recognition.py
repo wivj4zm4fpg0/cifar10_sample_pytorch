@@ -55,9 +55,9 @@ scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer)  # ロス値が変�
 
 # ログファイルの生成
 with open(log_train_path, mode='w') as f:
-    f.write('epoch,loss,accuracy,time\n')
+    f.write('epoch,loss,accuracy,time,learning_rate\n')
 with open(log_test_path, mode='w') as f:
-    f.write('epoch,loss,accuracy,time\n')
+    f.write('epoch,loss,accuracy,time,learning_rate\n')
 
 # CUDA環境の有無で処理を変更
 if args.use_cuda:
@@ -117,9 +117,10 @@ def estimate(data_loader, calcu, subset: str, epoch_num: int, log_file: str, bat
     loss_avg = epoch_loss / batch_len
     accuracy_avg = epoch_accuracy / batch_len
     epoch_time = time() - start_time
-    print(f'{subset}: epoch = {epoch_num + 1}, {loss_avg = }, {accuracy_avg = }, {epoch_time = }')
+    learning_rate = optimizer.state_dict()['param_groups'][0]['lr']
+    print(f'{subset}: epoch = {epoch_num + 1}, {loss_avg = }, {accuracy_avg = }, {epoch_time = }, {learning_rate = }')
     with open(log_file, mode='a') as f:
-        f.write(f'{epoch_num + 1},{loss_avg},{accuracy_avg},{epoch_time}\n')
+        f.write(f'{epoch_num + 1},{loss_avg},{accuracy_avg},{epoch_time},{learning_rate}\n')
 
 
 # 推論を実行
