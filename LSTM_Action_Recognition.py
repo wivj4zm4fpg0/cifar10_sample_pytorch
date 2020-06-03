@@ -33,7 +33,7 @@ batch_size = args.batch_size
 frame_num = args.frame_num
 log_train_path = os.path.join(args.output_dir, 'log_train.csv')
 log_test_path = os.path.join(args.output_dir, 'log_test.csv')
-json.dump(vars(args), open(os.path.join(args.output_dir, 'args.json'), mode='w'),
+json.dump(vars(args), open(os.path.join(args.output_dir, 'args.jsons'), mode='w'),
           ensure_ascii=False, indent=4, sort_keys=True, separators=(',', ': '))
 os.makedirs(args.output_dir, exist_ok=True)
 
