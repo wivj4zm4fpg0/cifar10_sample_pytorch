@@ -54,7 +54,8 @@ test_iterate_len = len(test_loader)
 # resnet18を取得
 Net = CNN_LSTM(args.class_num, pretrained=args.use_pretrained_model, bidirectional=args.use_bidirectional)
 criterion = nn.CrossEntropyLoss()  # Loss関数を定義
-optimizer = optim.Adam(Net.parameters(), lr=args.learning_rate)  # 重み更新方法を定義
+# optimizer = optim.Adam(Net.parameters(), lr=args.learning_rate)  # 重み更新方法を定義
+optimizer = optim.SGD(Net.parameters(), lr=args.learning_rate, momentum=0.9)  # 重み更新方法を定義
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer)  # ロス値が変わらなくなったときに学習係数を下げる
 if args.model_load_path:
     checkpoint = load(args.model_load_path)

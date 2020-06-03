@@ -18,7 +18,7 @@ class CNN_LSTM(nn.Module):
         self.resnet18 = nn.Sequential(*resnet18_modules_cut)
 
         # self.lstm_input_size = 1024
-        # self.fc_pre = nn.Linear(512, self.lstm_input_size)
+        # self.fc_pre = nn.Linear(512, 1024)
         # nn.init.kaiming_normal_(self.fc_pre.weight)
         # self.lstm = nn.LSTM(self.lstm_input_size, 512, num_layers=2, batch_first=True)
         # self.fc = nn.Linear(512, class_num)
