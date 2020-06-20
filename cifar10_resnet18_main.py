@@ -106,7 +106,6 @@ def estimate(data_loader, calc, subset: str, epoch_num: int, log_file: str, iter
 
         # 演算開始. start calculate.
         outputs, loss = calc(inputs, labels)
-        print(f'{outputs[0] = }')
 
         # 後処理
         predicted = torch.max(outputs.data, 1)[1]
