@@ -6,7 +6,7 @@ from time import time
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision.models import resnet18
+from resnet import resnet18
 
 from image_loader import ImageDataSet
 
@@ -132,21 +132,19 @@ try:
         Net.eval()
         estimate(test_loader, test, 'test', epoch, log_test_path, test_iterate_len)
 except KeyboardInterrupt:  # Ctrl-Cで保存．
-    if args.model_save_path:
-        torch.save({
-            'epoch': current_epoch,
-            'model_state_dict': Net.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'scheduler_state_dict': scheduler.state_dict()
-        }, model_save_path)
-        print('complete save model')
-        exit(0)
-
-if args.model_save_path:
     torch.save({
-        'epoch': epoch_num,
+        'epoch': current_epoch,
         'model_state_dict': Net.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'scheduler_state_dict': scheduler.state_dict()
     }, model_save_path)
     print('complete save model')
+    exit(0)
+
+torch.save({
+    'epoch': epoch_num,
+    'model_state_dict': Net.state_dict(),
+    'optimizer_state_dict': optimizer.state_dict(),
+    'scheduler_state_dict': scheduler.state_dict()
+}, model_save_path)
+print('complete save model')
