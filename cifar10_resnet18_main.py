@@ -20,6 +20,7 @@ parser.add_argument('--use_cuda', action='store_true')
 parser.add_argument('--use_pretrained_model', action='store_true')
 parser.add_argument('--model_load_path', type=str, required=False)
 parser.add_argument('--output_dir', type=str, required=True)
+parser.add_argument('--learning_rate', type=int, default=0.01, required=False)
 
 args = parser.parse_args()
 batch_size = args.batch_size
