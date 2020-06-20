@@ -9,4 +9,6 @@ logs
 logs/*
 jsons
 jsons/*
+scripts/
+scripts/*
 __pycache__/
